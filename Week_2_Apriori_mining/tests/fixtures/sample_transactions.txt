@@ -1,0 +1,5 @@
+Fast Food;Restaurants
+Fast Food;Restaurants
+Hotels;Travel
+IT Services & Computer Repair;Local Services
+Restaurants;Bars
