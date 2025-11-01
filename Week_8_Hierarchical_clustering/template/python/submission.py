@@ -36,7 +36,7 @@ def _agg_clust(X: List[List[float]], K: int, linkage: str = "single") -> List[in
   choose the pair whose smallest member index is smallest, then the other.
   """
   n = len(X)
-  print("start", n, K, linkage, file=sys.stderr)
+  # print("start", n, K, linkage, file=sys.stderr)
   # minimal trace: no per-point listing to reduce noise
   if K >= n:
     return list(range(n))
@@ -50,10 +50,11 @@ def _agg_clust(X: List[List[float]], K: int, linkage: str = "single") -> List[in
       d = EuclidDist(X[i], X[j])
       Pdist[i][j] = d
       Pdist[j][i] = d
-  print("dists", file=sys.stderr)
+  # print("dists", file=sys.stderr)
   for i in range(n):
     for j in range(i+1, n):
-      print(i, j, Pdist[i][j], file=sys.stderr)
+      # print(i, j, Pdist[i][j], file=sys.stderr)
+      pass
 
   # clusters: list of lists of original indices
   clusters = [[i] for i in range(n)]
@@ -106,7 +107,7 @@ def _agg_clust(X: List[List[float]], K: int, linkage: str = "single") -> List[in
     i, j = bestPair
     # merge j into i (keep order stable)
     new_cluster = clusters[i] + clusters[j]
-    print("step", step, "merge", i, j, bestD, file=sys.stderr)
+  # print("step", step, "merge", i, j, bestD, file=sys.stderr)
     # remove j first (larger index) then replace i
     if j > i:
       del clusters[j]
