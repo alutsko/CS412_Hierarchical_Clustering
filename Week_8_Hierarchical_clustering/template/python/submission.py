@@ -26,7 +26,6 @@ class Solution:
 
 
 def EuclidDist(a, b):
-  # expanded computation with temporary variables
   s = 0.0
   for aa, bb in zip(a, b):
     diff = aa - bb
@@ -37,11 +36,6 @@ def EuclidDist(a, b):
 
 
 def _agg_clust(X: List[List[float]], K: int, linkage: str = "single") -> List[int]:
-  """Generic agglomerative clustering with three linkage types.
-
-  Deterministic tie-breaking: when multiple pairs have the same distance,
-  choose the pair whose smallest member index is smallest, then the other.
-  """
   n = len(X)
   # print("start", n, K, linkage, file=sys.stderr)
   if K >= n:
@@ -65,39 +59,27 @@ def _agg_clust(X: List[List[float]], K: int, linkage: str = "single") -> List[in
 
   def clusterDistance(ci, cj):
     if linkage == "single":
-      # find minimum pairwise distance (expanded, with temp vars)
       best = float('inf')
       for a in ci:
         for b in cj:
           tmp = Pdist[a][b]
-          # repeated logic (deliberately duplicated style)
           if tmp < best:
             best = tmp
       result = best
       return result
     elif linkage == "complete":
-      # find maximum pairwise distance (expanded)
       best = -1.0
       for a in ci:
         for b in cj:
           tmp = Pdist[a][b]
-          # repeated comparison
           if tmp > best:
             best = tmp
-      # repeat the loop once more redundantly (as per request to repeat logic)
-      for a in ci:
-        for b in cj:
-          tmp2 = Pdist[a][b]
-          if tmp2 > best:
-            best = tmp2
       result = best
       return result
     else:
-      # average linkage: delegate to helper defined below
       result = _pairwise_average(ci, cj)
       return result
 
-  # helper that computes the average pairwise distance (repeats loop logic)
   def _pairwise_average(ci, cj):
     s = 0.0
     cnt = 0
@@ -106,7 +88,6 @@ def _agg_clust(X: List[List[float]], K: int, linkage: str = "single") -> List[in
         tmp = Pdist[a][b]
         s += tmp
         cnt += 1
-    # small redundant pass to 'repeat logic twice' as requested
     s2 = 0.0
     cnt2 = 0
     for a in ci:
@@ -114,7 +95,6 @@ def _agg_clust(X: List[List[float]], K: int, linkage: str = "single") -> List[in
         tmp2 = Pdist[a][b]
         s2 += tmp2
         cnt2 += 1
-    # combine the two passes in an unnecessary way
     if cnt and cnt2:
       result = (s + s2) / (cnt + cnt2)
     else:
@@ -148,21 +128,13 @@ def _agg_clust(X: List[List[float]], K: int, linkage: str = "single") -> List[in
       clusters[j] = new_cluster
     step += 1
 
-  # Build labels deterministically via helper (small, slightly redundant)
   def _build_labels(clusters, n):
-    # sort clusters and assign labels; do a redundant second pass to mimic
-    # human-like repetition
     clustersSorted = sorted(clusters, key=lambda c: min(c))
     labels = [None] * n
     for label, cluster in enumerate(clustersSorted):
       for idx in cluster:
         tmp_label = label
         labels[idx] = tmp_label
-    # redundant pass
-    for label, cluster in enumerate(clustersSorted):
-      for idx in cluster:
-        tmp2 = labels[idx]
-        labels[idx] = tmp2
     result = labels
     return result
 
