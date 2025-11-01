@@ -37,13 +37,11 @@ def _agg_clust(X: List[List[float]], K: int, linkage: str = "single") -> List[in
   """
   n = len(X)
   # print("start", n, K, linkage, file=sys.stderr)
-  # minimal trace: no per-point listing to reduce noise
   if K >= n:
     return list(range(n))
   if K <= 1:
     return [0] * n
 
-  # Precompute pairwise point distances
   Pdist = [[0.0] * n for _ in range(n)]
   for i in range(n):
     for j in range(i + 1, n):
@@ -56,41 +54,70 @@ def _agg_clust(X: List[List[float]], K: int, linkage: str = "single") -> List[in
       # print(i, j, Pdist[i][j], file=sys.stderr)
       pass
 
-  # clusters: list of lists of original indices
   clusters = [[i] for i in range(n)]
 
   def clusterDistance(ci, cj):
-    # ci and cj are lists of indices
     if linkage == "single":
-      # minimum pairwise distance
+      # find minimum pairwise distance (expanded, with temp vars)
       best = float('inf')
       for a in ci:
         for b in cj:
-          if Pdist[a][b] < best:
-            best = Pdist[a][b]
-      return best
+          tmp = Pdist[a][b]
+          # repeated logic (deliberately duplicated style)
+          if tmp < best:
+            best = tmp
+      result = best
+      return result
     elif linkage == "complete":
-      best = 0.0
+      # find maximum pairwise distance (expanded)
+      best = -1.0
       for a in ci:
         for b in cj:
-          if Pdist[a][b] > best:
-            best = Pdist[a][b]
-      return best
-    else:  # average
-      s = 0.0
-      cnt = 0
+          tmp = Pdist[a][b]
+          # repeated comparison
+          if tmp > best:
+            best = tmp
+      # repeat the loop once more redundantly (as per request to repeat logic)
       for a in ci:
         for b in cj:
-          s += Pdist[a][b]
-          cnt += 1
-      return s / cnt if cnt else float('inf')
+          tmp2 = Pdist[a][b]
+          if tmp2 > best:
+            best = tmp2
+      result = best
+      return result
+    else:
+      # average linkage: delegate to helper defined below
+      result = _pairwise_average(ci, cj)
+      return result
 
-  # Agglomerate until we have K clusters
+  # helper that computes the average pairwise distance (repeats loop logic)
+  def _pairwise_average(ci, cj):
+    s = 0.0
+    cnt = 0
+    for a in ci:
+      for b in cj:
+        tmp = Pdist[a][b]
+        s += tmp
+        cnt += 1
+    # small redundant pass to 'repeat logic twice' as requested
+    s2 = 0.0
+    cnt2 = 0
+    for a in ci:
+      for b in cj:
+        tmp2 = Pdist[a][b]
+        s2 += tmp2
+        cnt2 += 1
+    # combine the two passes in an unnecessary way
+    if cnt and cnt2:
+      result = (s + s2) / (cnt + cnt2)
+    else:
+      result = float('inf')
+    return result
+
   step = 0
   while len(clusters) > K:
     bestD = float('inf')
     bestPair = None
-    # find pair to merge
     for i in range(len(clusters)):
       for j in range(i + 1, len(clusters)):
         d = clusterDistance(clusters[i], clusters[j])
@@ -98,17 +125,14 @@ def _agg_clust(X: List[List[float]], K: int, linkage: str = "single") -> List[in
           bestD = d
           bestPair = (i, j)
         elif abs(d - bestD) <= 1e-12:
-          # tie-break deterministically by smallest indices
           cur = (min(clusters[i]), min(clusters[j]))
           prev = (min(clusters[bestPair[0]]), min(clusters[bestPair[1]]))
           if cur < prev:
             bestPair = (i, j)
 
     i, j = bestPair
-    # merge j into i (keep order stable)
     new_cluster = clusters[i] + clusters[j]
   # print("step", step, "merge", i, j, bestD, file=sys.stderr)
-    # remove j first (larger index) then replace i
     if j > i:
       del clusters[j]
       clusters[i] = new_cluster
@@ -117,7 +141,6 @@ def _agg_clust(X: List[List[float]], K: int, linkage: str = "single") -> List[in
       clusters[j] = new_cluster
     step += 1
 
-  # Build labels deterministically: sort clusters by smallest member index
   clustersSorted = sorted(clusters, key=lambda c: min(c))
   labels = [None] * n
   for label, cluster in enumerate(clustersSorted):
