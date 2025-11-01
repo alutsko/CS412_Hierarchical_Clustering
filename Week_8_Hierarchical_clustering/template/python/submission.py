@@ -37,9 +37,7 @@ def _agg_clust(X: List[List[float]], K: int, linkage: str = "single") -> List[in
   """
   n = len(X)
   print("start", n, K, linkage, file=sys.stderr)
-  print("points", file=sys.stderr)
-  for idx, pt in enumerate(X):
-    print(idx, pt, file=sys.stderr)
+  # minimal trace: no per-point listing to reduce noise
   if K >= n:
     return list(range(n))
   if K <= 1:
@@ -109,8 +107,6 @@ def _agg_clust(X: List[List[float]], K: int, linkage: str = "single") -> List[in
     # merge j into i (keep order stable)
     new_cluster = clusters[i] + clusters[j]
     print("step", step, "merge", i, j, bestD, file=sys.stderr)
-    print("members_i", clusters[i], file=sys.stderr)
-    print("members_j", clusters[j], file=sys.stderr)
     # remove j first (larger index) then replace i
     if j > i:
       del clusters[j]
@@ -118,7 +114,6 @@ def _agg_clust(X: List[List[float]], K: int, linkage: str = "single") -> List[in
     else:
       del clusters[i]
       clusters[j] = new_cluster
-    print("new_count", len(clusters), file=sys.stderr)
     step += 1
 
   # Build labels deterministically: sort clusters by smallest member index
