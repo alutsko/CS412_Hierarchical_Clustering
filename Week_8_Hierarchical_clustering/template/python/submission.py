@@ -165,4 +165,6 @@ def runFromStdin():
 
 
 if __name__ == "__main__":
+  # enable verbose tracing when executed directly for debugging/inspection
+  VERBOSE = True
   runFromStdin()
