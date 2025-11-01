@@ -1,5 +1,9 @@
 # Submit this file to Gradescope
 from typing import List
+import sys
+
+# When True, print debug traces to stderr so stdout (labels) is unchanged.
+VERBOSE = False
 # you may use other Python standard libraries, but not data
 # science libraries, such as numpy, scikit-learn, etc.
 
@@ -35,6 +39,11 @@ def _agg_clust(X: List[List[float]], K: int, linkage: str = "single") -> List[in
   choose the pair whose smallest member index is smallest, then the other.
   """
   n = len(X)
+  if VERBOSE:
+    print(f"[debug] starting _agg_clust: n={n}, K={K}, linkage={linkage}", file=sys.stderr)
+    print(f"[debug] points:", file=sys.stderr)
+    for idx, pt in enumerate(X):
+      print(f"  {idx}: {pt}", file=sys.stderr)
   if K >= n:
     return list(range(n))
   if K <= 1:
@@ -47,6 +56,11 @@ def _agg_clust(X: List[List[float]], K: int, linkage: str = "single") -> List[in
       d = EuclidDist(X[i], X[j])
       Pdist[i][j] = d
       Pdist[j][i] = d
+  if VERBOSE:
+    print("[debug] pairwise distances (upper triangle):", file=sys.stderr)
+    for i in range(n):
+      for j in range(i+1, n):
+        print(f"  d({i},{j})={Pdist[i][j]:.6f}", file=sys.stderr)
 
   # clusters: list of lists of original indices
   clusters = [[i] for i in range(n)]
@@ -78,6 +92,7 @@ def _agg_clust(X: List[List[float]], K: int, linkage: str = "single") -> List[in
       return s / cnt if cnt else float('inf')
 
   # Agglomerate until we have K clusters
+  step = 0
   while len(clusters) > K:
     bestD = float('inf')
     bestPair = None
@@ -98,6 +113,10 @@ def _agg_clust(X: List[List[float]], K: int, linkage: str = "single") -> List[in
     i, j = bestPair
     # merge j into i (keep order stable)
     new_cluster = clusters[i] + clusters[j]
+    if VERBOSE:
+      print(f"[debug] step={step}: merging clusters at indices ( {i}, {j} ) distance={bestD:.6f}", file=sys.stderr)
+      print(f"[debug]   cluster {i} members: {clusters[i]}", file=sys.stderr)
+      print(f"[debug]   cluster {j} members: {clusters[j]}", file=sys.stderr)
     # remove j first (larger index) then replace i
     if j > i:
       del clusters[j]
@@ -105,6 +124,9 @@ def _agg_clust(X: List[List[float]], K: int, linkage: str = "single") -> List[in
     else:
       del clusters[i]
       clusters[j] = new_cluster
+    if VERBOSE:
+      print(f"[debug] step={step}: new clusters count = {len(clusters)}", file=sys.stderr)
+      step += 1
 
   # Build labels deterministically: sort clusters by smallest member index
   clustersSorted = sorted(clusters, key=lambda c: min(c))
