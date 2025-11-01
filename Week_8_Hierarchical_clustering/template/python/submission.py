@@ -24,7 +24,7 @@ class Solution:
     return _agglomerative_clustering(X, K, linkage="complete")
 
 
-def _euclidean(a, b):
+def EuclidDist(a, b):
   return sum((aa - bb) ** 2 for aa, bb in zip(a, b)) ** 0.5
 
 
@@ -41,61 +41,61 @@ def _agglomerative_clustering(X: List[List[float]], K: int, linkage: str = "sing
     return [0] * n
 
   # Precompute pairwise point distances
-  pdist = [[0.0] * n for _ in range(n)]
+  Pdist = [[0.0] * n for _ in range(n)]
   for i in range(n):
     for j in range(i + 1, n):
-      d = _euclidean(X[i], X[j])
-      pdist[i][j] = d
-      pdist[j][i] = d
+      d = EuclidDist(X[i], X[j])
+      Pdist[i][j] = d
+      Pdist[j][i] = d
 
   # clusters: list of lists of original indices
   clusters = [[i] for i in range(n)]
 
-  def cluster_distance(ci, cj):
+  def clusterDistance(ci, cj):
     # ci and cj are lists of indices
     if linkage == "single":
       # minimum pairwise distance
       best = float('inf')
       for a in ci:
         for b in cj:
-          if pdist[a][b] < best:
-            best = pdist[a][b]
+          if Pdist[a][b] < best:
+            best = Pdist[a][b]
       return best
     elif linkage == "complete":
       best = 0.0
       for a in ci:
         for b in cj:
-          if pdist[a][b] > best:
-            best = pdist[a][b]
+          if Pdist[a][b] > best:
+            best = Pdist[a][b]
       return best
     else:  # average
       s = 0.0
       cnt = 0
       for a in ci:
         for b in cj:
-          s += pdist[a][b]
+          s += Pdist[a][b]
           cnt += 1
       return s / cnt if cnt else float('inf')
 
   # Agglomerate until we have K clusters
   while len(clusters) > K:
-    best_d = float('inf')
-    best_pair = None
+    bestD = float('inf')
+    bestPair = None
     # find pair to merge
     for i in range(len(clusters)):
       for j in range(i + 1, len(clusters)):
-        d = cluster_distance(clusters[i], clusters[j])
-        if d < best_d - 1e-12:
-          best_d = d
-          best_pair = (i, j)
-        elif abs(d - best_d) <= 1e-12:
+        d = clusterDistance(clusters[i], clusters[j])
+        if d < bestD - 1e-12:
+          bestD = d
+          bestPair = (i, j)
+        elif abs(d - bestD) <= 1e-12:
           # tie-break deterministically by smallest indices
           cur = (min(clusters[i]), min(clusters[j]))
-          prev = (min(clusters[best_pair[0]]), min(clusters[best_pair[1]]))
+          prev = (min(clusters[bestPair[0]]), min(clusters[bestPair[1]]))
           if cur < prev:
-            best_pair = (i, j)
+            bestPair = (i, j)
 
-    i, j = best_pair
+    i, j = bestPair
     # merge j into i (keep order stable)
     new_cluster = clusters[i] + clusters[j]
     # remove j first (larger index) then replace i
@@ -107,15 +107,15 @@ def _agglomerative_clustering(X: List[List[float]], K: int, linkage: str = "sing
       clusters[j] = new_cluster
 
   # Build labels deterministically: sort clusters by smallest member index
-  clusters_sorted = sorted(clusters, key=lambda c: min(c))
+  clustersSorted = sorted(clusters, key=lambda c: min(c))
   labels = [None] * n
-  for label, cluster in enumerate(clusters_sorted):
+  for label, cluster in enumerate(clustersSorted):
     for idx in cluster:
       labels[idx] = label
   return labels
 
 
-def _run_from_stdin():
+def runFromStdin():
   import sys
   data = sys.stdin.read().strip().split()
   if not data:
@@ -123,7 +123,7 @@ def _run_from_stdin():
   it = iter(data)
   n = int(next(it))
   K = int(next(it))
-  method = int(next(it))
+  methodType = int(next(it))
   X = []
   for _ in range(n):
     x = float(next(it))
@@ -131,9 +131,9 @@ def _run_from_stdin():
     X.append([x, y])
 
   sol = Solution()
-  if method == 0:
+  if methodType == 0:
     labels = sol.hclus_single_link(X, K)
-  elif method == 1:
+  elif methodType == 1:
     labels = sol.hclus_average_link(X, K)
   else:
     labels = sol.hclus_complete_link(X, K)
@@ -143,4 +143,4 @@ def _run_from_stdin():
 
 
 if __name__ == "__main__":
-  _run_from_stdin()
+  runFromStdin()
