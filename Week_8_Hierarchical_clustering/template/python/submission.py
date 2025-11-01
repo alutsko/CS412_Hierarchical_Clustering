@@ -13,22 +13,22 @@ class Solution:
       A list of integers (range from 0 to K - 1) that represent class labels.
       The number does not matter as long as the clusters are correct.
       For example: [0, 0, 1] is treated the same as [1, 1, 0]"""
-    return _agglomerative_clustering(X, K, linkage="single")
+    return _agg_clust(X, K, linkage="single")
 
   def hclus_average_link(self, X: List[List[float]], K: int) -> List[int]:
     """Complete link hierarchical clustering"""
-    return _agglomerative_clustering(X, K, linkage="average")
+    return _agg_clust(X, K, linkage="average")
 
   def hclus_complete_link(self, X: List[List[float]], K: int) -> List[int]:
     """Average link hierarchical clustering"""
-    return _agglomerative_clustering(X, K, linkage="complete")
+    return _agg_clust(X, K, linkage="complete")
 
 
 def EuclidDist(a, b):
   return sum((aa - bb) ** 2 for aa, bb in zip(a, b)) ** 0.5
 
 
-def _agglomerative_clustering(X: List[List[float]], K: int, linkage: str = "single") -> List[int]:
+def _agg_clust(X: List[List[float]], K: int, linkage: str = "single") -> List[int]:
   """Generic agglomerative clustering with three linkage types.
 
   Deterministic tie-breaking: when multiple pairs have the same distance,
